@@ -5,6 +5,15 @@ __pycache__/
 *.tmp
 __pycache__/
 
+# Python Virtual environment
+venv/
+*.egg-info/
+dist/
+build/
+*.pyc
+*.pyo
+*.pyd
+
 # React
 node_modules/
 build/
