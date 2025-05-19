@@ -86,3 +86,98 @@ Beyond the core principles and architectural styles, several practical approache
 AKA does not replace SOLID, DDD, TDD, Clean Code, or Hexagonal Architecture; it provides a broader, dynamic context where they are orchestrated. AKA clarifies *why* and *where* to apply these practices and adds explicit evolution mechanisms and evaluability, making adaptation and resilience core design elements. It allows flexible evolution tools, incorporating these methodologies and key enabling practices as needed.
 
 AKA offers a holistic vision for systems thriving in dynamic environments, with SOLID, DDD, TDD, Clean Code, Hexagonal Architecture, Dependency Injection, and strong Observability practices as integral tools within its evolutionary framework.
+
+
+# Project Documentation
+
+## Overview
+
+This project is a FastAPI application designed with a focus on maintainability, testability, and scalability. It incorporates principles from SOLID, Domain-Driven Design (DDD), Test-Driven Development (TDD), and Hexagonal Architecture (also known as Ports and Adapters). The application is built with a local-first approach, aiming to efficiently process and serve large datasets (1M-80M rows) while ensuring high performance and modularity. The project utilizes DuckDB for both storage and querying, providing a powerful and efficient database solution.
+
+## Architecture
+
+### Hexagonal Architecture
+
+The application follows a Hexagonal Architecture, which promotes separation of concerns by isolating the core domain logic from external dependencies such as databases, message queues, and UI frameworks.
+
+- **Core (Domain):** The heart of the application, containing the business logic and domain models. It is independent of any external frameworks or technologies.
+- **Ports:** Interfaces that define how the core interacts with the outside world. There are two types of ports:
+    - **Driving Ports (Primary Ports):** Define how external actors (e.g., users, other systems) interact with the core. These are typically implemented as use cases or application services.
+    - **Driven Ports (Secondary Ports):** Define the interfaces that the core needs to interact with external systems (e.g., databases, message queues). These are typically implemented as repositories or data access objects.
+- **Adapters:** Implementations of the ports that connect the core to specific external technologies.
+    - **Driving Adapters:** Translate external requests into use case invocations. Examples include REST controllers and CLI commands.
+    - **Driven Adapters:** Implement the interfaces defined by the driven ports, providing concrete implementations for interacting with external systems. Examples include database repositories and message queue clients.
+
+### Domain-Driven Design (DDD)
+
+DDD principles are applied to model the core domain logic and ensure that the application is aligned with the business requirements.
+
+- **Entities:** Represent core domain concepts with unique identities and lifecycles (e.g., `Message`).
+- **Value Objects:** Represent immutable concepts that describe characteristics of entities (e.g., `Name`, `Address`).
+- **Interfaces:** Define the boundaries of the domain, specifying how the domain interacts with the outside world (e.g., `ExternalService`).
+
+### SOLID Principles
+
+The application adheres to the SOLID principles of object-oriented design:
+
+- **Single Responsibility Principle (SRP):** Each class or module has a single, well-defined responsibility.
+- **Open/Closed Principle (OCP):** Software entities should be open for extension but closed for modification.
+- **Liskov Substitution Principle (LSP):** Subtypes should be substitutable for their base types without altering the correctness of the program.
+- **Interface Segregation Principle (ISP):** Clients should not be forced to depend on methods they do not use.
+- **Dependency Inversion Principle (DIP):** High-level modules should not depend on low-level modules. Both should depend on abstractions.
+
+### Test-Driven Development (TDD)
+
+TDD is used to ensure that the application is thoroughly tested and that the code meets the specified requirements.
+
+- Write tests before writing the actual code.
+- Ensure that the tests cover all aspects of the application, including unit tests, integration tests, and end-to-end tests.
+
+## Modules
+
+### `main.py`
+
+- The entry point of the application.
+- Creates the FastAPI application instance.
+- Configures the application by setting up API routes and the dependency injection container.
+- Starts the Uvicorn server when the script is run directly.
+
+### `app/infrastructure/di/container.py`
+
+- Configures the dependency injection container using `Dependency Injector`.
+- Provides dependencies for the application, such as database connections, repositories, and application services.
+
+### `app/presentation/api/api_setup.py`
+
+- Sets up the API routes for the application.
+- Registers the REST controllers with the FastAPI application.
+
+## REST Controllers
+
+- `app/presentation/api/rest_controllers/greeting_controller.py`: Handles requests related to greetings.
+- `app/presentation/api/rest_controllers/external_data_controller.py`: Handles requests related to external data.
+
+## Use Cases
+
+- `app/application/use_cases/get_greeting.py`: Retrieves a greeting message.
+- `app/application/use_cases/fetch_external_data.py`: Fetches external data from an API.
+
+## Adapters
+
+- `app/adapters/repositories/`: Contains implementations of the repository interfaces for accessing data.
+- `app/adapters/api_clients/`: Contains clients for interacting with external APIs.
+
+## Getting Started
+
+1. Install dependencies using Poetry: `poetry install`
+2. Run the application: `poetry run uvicorn main:app --reload`
+
+## Testing
+
+- The application includes unit tests, integration tests, and end-to-end tests.
+- Run the tests using pytest: `poetry run pytest`
+
+## Contributing
+
+- Follow the TDD approach when adding new features or modifying existing code.
+- Ensure that the code adheres to the SOLID principles and the Hexagonal Architecture.

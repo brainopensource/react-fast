@@ -1,22 +1,26 @@
+import asyncio
 from fastapi import FastAPI
-import requests
+
+from app.infrastructure.di.container import DIContainer
+from app.presentation.api.api_setup import setup_api
 
 
-app = FastAPI()
-
-@app.get("/")
-def read_root():
-    return {"message": "Hello, World!"}
-
-@app.get("/external")
-def get_external_data():
-    response = requests.get("https://google.com")
-    if response.headers.get("Content-Type") == "application/json":
-        return response.json()
-    else:
-        return {"error": "Response is not JSON", "content": response.text}
+def create_app() -> FastAPI:
+    """Create and configure the FastAPI application."""
+    app = FastAPI(title="Hexagonal FastAPI App")
     
-@app.get("/external_2")
-def get_external_data():
-    response = requests.get("https://jsonplaceholder.typicode.com/posts/2")
-    return response.json()
+    # Create the DI container
+    container = DIContainer()
+    
+    # Setup API routes
+    setup_api(app, container)
+    
+    return app
+
+
+app = create_app()
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

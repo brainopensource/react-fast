@@ -9,7 +9,7 @@ A modular, decoupled, high-performance data platform template designed for scien
 * **High Performance Local-First**: Support for efficient processing using engines like DuckDB and Polars for primarily local operation on Windows.
 * **Evolutionary and Decoupled Architecture**: Modular design that allows for future extension and easy replacement of components (data engines, APIs, queues), aligned with the AKA methodology.
 * **Flexible Integration**: Obtaining data from external APIs with support for multiple protocols (REST, WebSocket, GraphQL, Arrow Flight).
-* **Local Persistence**: Efficient saving of obtained data in a local database (DuckDB, SQLite).
+* **Local Persistence**: Efficient saving of obtained data in a local database (DuckDB).
 * **Query and Analysis Capabilities**: Allow the user to query information in the local database and perform heavy calculations on demand.
 * **Automation and Scheduling**: Scheduling routines for data processing or modeling algorithms.
 * **AI Preparation**: Structure that facilitates future integration and experimentation with Artificial Intelligence models.
@@ -38,70 +38,54 @@ A modular, decoupled, high-performance data platform template designed for scien
 
 ```
 backend/
-│
 ├── app/
-│   ├── domain/                          # Pure domain logic (no external deps)
-│   │   ├── entities/                    # Business entities
-│   │   ├── value_objects/               # Immutable value objects
-│   │   └── interfaces/                  # Interfaces (contracts)
-│   │       ├── repositories/            # Interfaces for data access
-│   │       ├── data_processors/         # Interfaces for data processing
-│   │       ├── task_queue/              # Interfaces for task queue
-│   │       └── data_transfer/           # Interfaces for data transfer
-│   │
-│   ├── application/                     # Application orchestration
-│   │   ├── use_cases/                   # use_cases
-│   │   ├── dtos/                        # dtos
-│   │   └── services/                    # Application services
-│   │
-│   ├── adapters/                        # Concrete implementations
-│   │   ├── repositories/                # repositories
-│   │   │   ├── duckdb_repository.py     # DuckDB implementation
-│   │   │   └── memory_repository.py     # In-memory implementation for testing
-│   │   ├── processors/                  # processors
-│   │   │   ├── pandas_processor.py      # Processor using pandas
-│   │   │   └── polars_processor.py      # Processor using polars
-│   │   ├── task_queue/                  # task_queue
-│   │   │   └── redis_queue.py           # Redis implementation
-│   │   ├── data_transfer/               # data_transfer
-│   │   │   ├── arrow_flight.py          # Transfer using Arrow Flight
-│   │   │   └── json_transfer.py         # Transfer using JSON
-│   │   └── api_clients/                 # External API clients (e.g., OData, REST)
-│   │       ├── odata_client.py          # OData client
-│   │       └── rest_client.py         # Generic REST client
-│   │
-│   ├── infrastructure/                  # Infra, DI and config
-│   │   ├── database/                    # Database configuration
-│   │   │   └── duckdb_config.py         # DuckDB configuration
-│   │   ├── messaging/                   # Messaging configuration
-│   │   │   └── redis_config.py          # Redis configuration
-│   │   ├── logging/                     # Logging configuration
-│   │   │   └── logger.py                # Main logger
-│   │   ├── settings/                    # Application settings
-│   │   │   └── app_settings.py          # Settings with Pydantic
-│   │   └── di/                          # Dependency Injection
-│   │       └── container.py             # Dependency container
-│   │
-│   └── presentation/                    # Interface layer
-│       ├── api/                         # API controllers
-│       │   ├── rest_controllers/        # REST endpoints
-│       │   ├── graphql_schema/          # GraphQL schema and resolvers
-│       │   └── websocket_handlers/      # WebSocket handlers
-│       ├── cli/                         # Command line interface
-│       └── converters/                  # Format converters
-│
-├── config/                              # External configuration files (.env, YAML, etc.)
-├── scripts/                             # Utility scripts and administrative tasks
-├── tests/                               # Automated tests
-│   ├── unit/                            # Unit tests (focus on domain and application with mocks/fakes)
-│   ├── integration/                     # Integration tests (cover adapters with real dependencies)
-│   └── e2e/                             # End-to-end tests (complete flows)
-├── docs/                                # Project documentation
-├── .env                                 # Environment variables
-├── requirements.txt                     # Dependencies
-├── pyproject.toml                     # Project configuration
-└── main.py                              # Entry point
-````
+│   ├── adapters/                # Implementations of driven ports (e.g., database repositories, API clients)
+│   │   ├── api_clients/         # External API clients
+│   │   ├── api_clients/__init__.py
+│   │   ├── data_transfer/       # Data transfer objects and HTTP client
+│   │   ├── data_transfer/__init__.py
+│   │   ├── data_transfer/http_client.py
+│   │   ├── processors/          # Data processors
+│   │   ├── repositories/        # Database repositories
+│   │   └── task_queue/          # Task queue adapters
+│   ├── application/           # Application layer (use cases and application services)
+│   │   ├── dtos/                # Data transfer objects
+│   │   ├── dtos/__init__.py
+│   │   ├── dtos/external_data_dto.py
+│   │   ├── services/            # Application services
+│   │   ├── use_case/            # Use case interfaces
+│   │   ├── use_cases/           # Use case implementations
+│   │   │   ├── __init__.py
+│   │   │   ├── fetch_external_data.py
+│   │   │   └── get_greeting.py
+│   ├── domain/                # Core domain logic (entities, value objects, interfaces)
+│   │   ├── entities/            # Domain entities
+│   │   ├── interfaces/          # Domain interfaces
+│   │   └── value_objects/       # Value objects
+│   ├── infrastructure/        # Infrastructure concerns (e.g., database connections, DI container)
+│   │   ├── database/            # Database configuration
+│   │   ├── di/                  # Dependency injection container
+│   │   │   ├── __init__.py
+│   │   │   └── container.py
+│   │   ├── logging/             # Logging configuration
+│   │   ├── messaging/           # Messaging infrastructure
+│   │   └── settings/            # Application settings
+│   ├── presentation/          # Presentation layer (driving adapters)
+│   │   ├── api/                 # REST API controllers and setup
+│   │   │   ├── __init__.py
+│   │   │   ├── api_setup.py
+│   │   │   └── rest_controllers/
+│   │   │       ├── __init__.py
+│   │   │       ├── external_data_controller.py
+│   │   │       └── greeting_controller.py
+│   │   ├── cli/                 # Command-line interface
+│   │   └── converters/          # Data converters
+│   ├── __init__.py            # Initialize the app package
+│   └── __pycache__/           # Cache files
+├── main.py                    # Entry point of the application
+├── pyproject.toml             # Poetry configuration file
+└── README.md                  # Project README file
+```
 
 -----
 
@@ -109,7 +93,7 @@ backend/
 
 ### ✅ Evolutionary AKA Methodology
 
-Adopts an approach that allows for continuous evolution of the system, adapting to new needs and technologies, including the future integration of AI.
+Adopts an approach that allows for continuous evolution of the system, adapting to new needs and technologies, including the future integration of AI. The Adaptive Knowledge Architecture (AKA) is a comprehensive software design methodology that serves as a superset encompassing principles from SOLID, Domain-Driven Design (DDD), Test-Driven Development (TDD), Clean Code, and Hexagonal Architecture. It focuses on building systems that are intrinsically evolutionary, resilient, and adaptable to continuous change. AKA separates the system's **Central Intention** (its fundamental and invariant purpose) from its **Contextual and Adaptable Implementation** (how that intention is realized in specific environments using technologies and logics that may evolve).
 
 ### ✅ SOLID, DDD, TDD, Clean Code, Hexagonal Architecture
 
@@ -223,6 +207,39 @@ poetry run pytest
 
 -----
 
+## 🚀 Getting Started
+
+1.  **Clone the Repository**:
+    ```bash
+    git clone https://github.com/yourusername/datascience-app.git
+    cd datascience-app
+    ```
+
+2.  **Set Up a Virtual Environment**:
+    ```bash
+    python -m venv venv
+    source venv/bin/activate   # On Linux or macOS
+    venv\\Scripts\\activate  # On Windows
+    ```
+
+3.  **Install Dependencies**:
+    ```bash
+    poetry install
+    ```
+
+4.  **Configure environment variables**:
+    Create a `.env` file in the root directory and set the required environment variables. Example:
+    ```
+    DB_ENGINE=duckdb
+    DATA_PROCESSOR_ENGINE=polars
+    ```
+
+5.  **Run the Application**:
+    ```bash
+    python main.py
+    ```
+-----
+
 ## 🧩 Component Replacement
 
 Examples of swapping via configuration (`.env` or other configuration system):
@@ -234,34 +251,6 @@ Examples of swapping via configuration (`.env` or other configuration system):
   * Transfer Format: JSON Transfer ⬌ Arrow Flight
 
 Replacement is done in the infrastructure layer (DI Container) without impacting the domain or application layers.
-
------
-
-## 🚀 Execution / Installation
-
-```bash
-# Install dependencies
-poetry install
-
-# Run the application (main entry point)
-python main.py
-```
-
-```bash
-# Clone the repository
-git clone [https://github.com/your-org/high_performance_data_platform.git](https://github.com/your-org/high_performance_data_platform.git)
-cd high_performance_data_platform
-
-# Install dependencies
-poetry install
-
-# Configure environment variables (e.g., in the .env file)
-# Ex: DB_ENGINE=duckdb
-# Ex: DATA_PROCESSOR_ENGINE=polars
-
-# Run
-python main.py
-```
 
 -----
 
@@ -333,11 +322,11 @@ This vision extends the platform into a dynamic, human-AI ecosystem that evolves
 
   * 🐍 Python 3.11+
   * ⚙️ Web/API Frameworks: FastAPI, Strawberry (GraphQL), WebSockets
-  * 🐤 Data Processing Engines: DuckDB, Polars, Pandas
+  * 🐤 Data Processing Engines: DuckDB
   * 🔁 Message/Task Queue: Redis
   * 🏗️ Architecture and Design Tools: Pydantic, Factory Pattern, Dependency Injection, DDD, Hexagonal Architecture
   * 🧪 Testing: Pytest
-  * Databases: DuckDB, SQLite, PostgreSQL (via adapter)
+  * Databases: DuckDB
   * Transfer Protocols: Arrow Flight, JSON
   * Configuration: python-dotenv, Pydantic Settings
   * Development Tools: Poetry, pytest
@@ -345,8 +334,8 @@ This vision extends the platform into a dynamic, human-AI ecosystem that evolves
 | Layer         | Tools              |
 |---------------|--------------------|
 | Core Logic    | Python 3.11+       |
-| DB            | DuckDB, SQLite, PostgreSQL (via adapter) |
-| Processing    | Polars, Pandas     |
+| DB            | DuckDB             |
+| Processing    | DuckDB             |
 | Queue         | Redis              |
 | API           | FastAPI, Strawberry, Websockets |
 | Transfer      | Arrow Flight, JSON |
