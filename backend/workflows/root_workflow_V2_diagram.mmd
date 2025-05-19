@@ -1,0 +1,7 @@
+graph TD;
+    A[Start] --> B[Redirect Handling Module]
+    B --> C[Error Handling]
+    C -->|Success| D[Response Generation Module]
+    C -->|Failure| E[Return Error Response]
+    D --> F[Return Welcome Message]
+    F --> G[End]
