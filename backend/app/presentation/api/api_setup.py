@@ -2,6 +2,7 @@ from fastapi import FastAPI
 
 from app.infrastructure.di.container import DIContainer
 from app.presentation.api.rest_controllers.external_data_controller import ExternalDataController
+from app.presentation.api.rest_controllers.odata_test_controller import odata_test_controller
 from app.presentation.api.rest_controllers.greeting_controller import GreetingController
 
 
@@ -14,3 +15,4 @@ def setup_api(app: FastAPI, container: DIContainer):
     # Include routers
     app.include_router(greeting_controller.router, tags=["greetings"])
     app.include_router(external_data_controller.router, tags=["external_data"])
+    app.include_router(odata_test_controller, tags=["odata_test"])

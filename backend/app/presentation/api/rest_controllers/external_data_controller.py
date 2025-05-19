@@ -1,3 +1,4 @@
+import os
 from fastapi import APIRouter, Depends, HTTPException
 
 from app.application.dtos.external_data_dto import ExternalDataError, ExternalDataResponse
@@ -18,19 +19,21 @@ class ExternalDataController:
         self.router.add_api_route("/external_2", self.get_external_data_2, methods=["GET"])
     
     async def get_external_data(self):
-        """Get data from an external API (Google)."""
+        """Get data from an external API (configured via .env)."""
+        google_url = os.getenv("EXTERNAL_API_GOOGLE_URL", "https://google.com")  # Default if not set
         use_case = self.container.get(FetchExternalDataUseCase)
-        result = await use_case.execute("https://google.com")
+        result = await use_case.execute(google_url)
         
         if isinstance(result, ExternalDataError):
             return {"error": result.error, "content": result.content}
         
         return result.data
-    
+
     async def get_external_data_2(self):
-        """Get data from JSON Placeholder API."""
+        """Get data from JSON Placeholder API (configured via .env)."""
+        json_placeholder_url = os.getenv("EXTERNAL_API_JSON_PLACEHOLDER_URL", "https://jsonplaceholder.typicode.com/posts/2")  # Default if not set
         use_case = self.container.get(FetchExternalDataUseCase)
-        result = await use_case.execute("https://jsonplaceholder.typicode.com/posts/2")
+        result = await use_case.execute(json_placeholder_url)
         
         if isinstance(result, ExternalDataError):
             return {"error": result.error}
