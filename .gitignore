@@ -23,6 +23,7 @@ build/
 .env.test.local
 .env.production.local
 public/build/
+bench_results.csv
 
 # Other
 .DS_Store
