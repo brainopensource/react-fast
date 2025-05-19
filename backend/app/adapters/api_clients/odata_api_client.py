@@ -5,11 +5,16 @@ from requests.auth import HTTPBasicAuth
 import os
 
 class ODataAPIClient(ExternalServiceInterface):
-    def __init__(self, base_url: str):
+    def __init__(self, base_url: str, username: str = None, password: str = None):
         self.base_url = base_url
-        # Store credentials from environment variables
-        self.username = os.getenv("CREDENTIALS_USERNAME")
-        self.password = os.getenv("CREDENTIALS_PASSWORD")
+        if username is None:
+            self.username = os.getenv("ODATA_USERNAME")
+        else:
+            self.username = username
+        if password is None:
+            self.password = os.getenv("ODATA_PASSWORD")
+        else:
+            self.password = password
 
     async def fetch_data(self, endpoint: str, username: str = None, password: str = None) -> Any:
         # URL encode the endpoint to handle special characters

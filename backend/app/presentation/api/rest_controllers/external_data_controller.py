@@ -15,27 +15,23 @@ class ExternalDataController:
         self._configure_routes()
     
     def _configure_routes(self):
-        self.router.add_api_route("/external", self.get_external_data, methods=["GET"])
-        self.router.add_api_route("/external_2", self.get_external_data_2, methods=["GET"])
+        self.router.add_api_route("/external/{api_type}", self.get_external_data, methods=["GET"])
     
-    async def get_external_data(self):
-        """Get data from an external API (configured via .env)."""
-        google_url = os.getenv("EXTERNAL_API_GOOGLE_URL", "https://google.com")  # Default if not set
+    async def get_external_data(self, api_type: str):
+        """Get data from an external API based on the provided type."""
+        if api_type == "google":
+            url = os.getenv("EXTERNAL_API_GOOGLE_URL", "https://google.com")
+        elif api_type == "json":
+            url = os.getenv("EXTERNAL_API_JSON_PLACEHOLDER_URL", "https://jsonplaceholder.typicode.com/posts/2")
+        else:
+            raise HTTPException(status_code=400, detail="Invalid api_type")
+        
         use_case = self.container.get(FetchExternalDataUseCase)
-        result = await use_case.execute(google_url)
+        result = await use_case.execute(url)
         
         if isinstance(result, ExternalDataError):
-            return {"error": result.error, "content": result.content}
+            return {"error": result.error, "content": result.content if hasattr(result, 'content') else None}
         
         return result.data
 
-    async def get_external_data_2(self):
-        """Get data from JSON Placeholder API (configured via .env)."""
-        json_placeholder_url = os.getenv("EXTERNAL_API_JSON_PLACEHOLDER_URL", "https://jsonplaceholder.typicode.com/posts/2")  # Default if not set
-        use_case = self.container.get(FetchExternalDataUseCase)
-        result = await use_case.execute(json_placeholder_url)
-        
-        if isinstance(result, ExternalDataError):
-            return {"error": result.error}
-        
-        return result.data
+    # get_external_data_2 has been consolidated into get_external_data

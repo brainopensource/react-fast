@@ -19,7 +19,9 @@ class DIContainer:
         # Register adapters
         self._services[ExternalServiceInterface] = HttpClient()
         self._services[ODataAPIClient] = ODataAPIClient(
-            base_url=os.getenv("ODATA_WM_LDI_URL")
+            base_url=os.getenv("ODATA_WM_LDI_URL"),
+            username=os.getenv("ODATA_USERNAME"),
+            password=os.getenv("ODATA_PASSWORD")
         )
         
         # Register use cases
