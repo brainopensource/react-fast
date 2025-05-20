@@ -1,32 +1,22 @@
-import unittest
-from unittest.mock import MagicMock
-from backend.app.application.use_cases.fetch_odata_data import FetchODataData
-from backend.app.adapters.api_clients.odata_api_client import ODataAPIClient
+import pytest
+from fastapi.testclient import TestClient
+from app.main import app  # Assuming the FastAPI app is defined in main.py
+from unittest.mock import patch
 
-class TestFetchODataData(unittest.TestCase):
-    def setUp(self):
-        self.mock_external_service = MagicMock(spec=ODataAPIClient)
-        self.use_case = FetchODataData(self.mock_external_service)
+@pytest.fixture
+def client():
+    return TestClient(app)
 
-    def test_execute_success(self):
-        # Arrange
-        expected_data = {"key": "value"}
-        self.mock_external_service.fetch_data.return_value = expected_data
+def test_get_odata_data(client):
+    odata_url = "https://example.com/odata"
+    username = "test_user"
+    password = "test_password"
 
-        # Act
-        result = self.use_case.execute("username", "password")
+    with patch('app.adapters.api_clients.new_odata_api_client.NewODataAPIClient') as MockClient:
+        mock_instance = MockClient.return_value
+        mock_instance.fetch_data.return_value.json.return_value = {"data": "mocked data"}
 
-        # Assert
-        self.assertEqual(result.data, expected_data)
-        self.mock_external_service.fetch_data.assert_called_once_with("username", "password")
+        response = client.get("/odata", params={"odata_url": odata_url, "username": username, "password": password})
 
-    def test_execute_failure(self):
-        # Arrange
-        self.mock_external_service.fetch_data.side_effect = Exception("API error")
-
-        # Act & Assert
-        with self.assertRaises(Exception):
-            self.use_case.execute("username", "password")
-
-if __name__ == "__main__":
-    unittest.main()
+        assert response.status_code == 200
+        assert response.json() == {"data": "mocked data"}

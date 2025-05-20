@@ -1,5 +1,7 @@
 import os
 from fastapi import APIRouter, Depends, HTTPException
+from app.application.use_cases.fetch_odata_data import FetchODataDataUseCase
+from app.adapters.api_clients.new_odata_api_client import NewODataAPIClient
 
 from app.application.dtos.external_data_dto import ExternalDataError, ExternalDataResponse
 from app.application.use_cases.fetch_external_data import FetchExternalDataUseCase
@@ -16,6 +18,8 @@ class ExternalDataController:
     
     def _configure_routes(self):
         self.router.add_api_route("/external/{api_type}", self.get_external_data, methods=["GET"])
+        self.router.add_api_route("/odata", self.get_odata_data, methods=["GET"])
+        self.router.add_api_route("/odata_new", self.get_odata_new_data, methods=["GET"])
     
     async def get_external_data(self, api_type: str):
         """Get data from an external API based on the provided type."""
@@ -34,4 +38,28 @@ class ExternalDataController:
         
         return result.data
 
-    # get_external_data_2 has been consolidated into get_external_data
+    async def get_odata_data(self, odata_url: str, username: str, password: str):
+        """Get data from an OData API."""
+        client = NewODataAPIClient(odata_url, username, password)
+        use_case = FetchODataDataUseCase(client)
+        result = await use_case.execute()
+        
+        if isinstance(result, ExternalDataError):
+            return {"error": result.error, "content": result.content if hasattr(result, 'content') else None}
+        
+        return result.data
+
+    async def get_odata_new_data(self):
+        """Get data from the OData API using hardcoded credentials."""
+        odata_url = os.getenv("ODATA_WM_LDI_URL")
+        username = os.getenv("CREDENTIALS_USERNAME")
+        password = os.getenv("CREDENTIALS_PASSWORD")
+        
+        client = NewODataAPIClient(odata_url, username, password)
+        use_case = FetchODataDataUseCase(client)
+        result = await use_case.execute(endpoint="anp__field_reference_prices_gas__transform")  # Pass the endpoint from feedback
+        
+        if isinstance(result, ExternalDataError):
+            return {"error": result.error, "content": result.content if hasattr(result, 'content') else None}
+        
+        return result.data

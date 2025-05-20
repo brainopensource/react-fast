@@ -8,11 +8,11 @@ class ODataAPIClient(ExternalServiceInterface):
     def __init__(self, base_url: str, username: str = None, password: str = None):
         self.base_url = base_url
         if username is None:
-            self.username = os.getenv("ODATA_USERNAME")
+            self.username = os.getenv("CREDENTIALS_USERNAME")
         else:
             self.username = username
         if password is None:
-            self.password = os.getenv("ODATA_PASSWORD")
+            self.password = os.getenv("CREDENTIALS_PASSWORD")
         else:
             self.password = password
 
