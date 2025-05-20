@@ -18,7 +18,7 @@ class ODataController:
         print("[odata_test] /odata_test endpoint called")
         try:
             fetch_data_use_case = self.container.get(FetchODataDataUseCase)
-            processed_data = fetch_data_use_case.execute()
+            processed_data = await fetch_data_use_case.execute()
             print(f"[odata_test] Data processed and saved successfully: {processed_data}")
             return {"message": "Data processed and saved successfully", "data": processed_data}
         except Exception as e:

@@ -7,6 +7,7 @@ from app.application.use_cases.fetch_odata_data import FetchODataDataUseCase
 from app.adapters.api_clients.odata_api_client import ODataAPIClient
 from app.adapters.api_clients.new_odata_api_client import NewODataAPIClient
 from app.domain.interfaces.http_interfaces.external_service import ExternalServiceInterface
+from app.infrastructure.database.o_data_repository import DuckDBODataRepository
 
 class DIContainer:
     """Simple dependency injection container."""
@@ -45,13 +46,17 @@ class DIContainer:
             password=password
         )
         
+        # Register the DuckDBODataRepository
+        self._services[DuckDBODataRepository] = DuckDBODataRepository()
+        
         # Register use cases
         self._services[GetGreetingUseCase] = GetGreetingUseCase()
         self._services[FetchExternalDataUseCase] = FetchExternalDataUseCase(
             external_service=self.get(ExternalServiceInterface)
         )
         self._services[FetchODataDataUseCase] = FetchODataDataUseCase(
-            api_client=self.get(ExternalServiceInterface)  # Ensure using the interface for consistency
+            api_client=self.get(ExternalServiceInterface),
+            odata_repository=self.get(DuckDBODataRepository)  # Inject the DuckDBODataRepository
         )
     
     def get(self, service_type):

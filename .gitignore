@@ -17,6 +17,11 @@ build/
 # Testing Scripts
 backend/scripts/test_odata.py
 
+# Database files
+*.sqlite3
+*.db
+*.db-journal
+
 # React
 node_modules/
 build/
