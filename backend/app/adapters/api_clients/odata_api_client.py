@@ -1,34 +1,44 @@
-from typing import Any
-from app.domain.interfaces.http_interfaces.external_service import ExternalServiceInterface
+from typing import Any, Dict
 import requests
-from requests.auth import HTTPBasicAuth
-import os
+from app.adapters.api_clients.base_odata_api_client import BaseODataAPIClient
 
-class ODataAPIClient(ExternalServiceInterface):
-    def __init__(self, base_url: str, username: str = None, password: str = None):
+class ODataAPIClient(BaseODataAPIClient):
+    """OData API client that implements the ExternalServiceInterface via BaseODataAPIClient."""
+    
+    def __init__(self, base_url: str, username: str, password: str):
+        """Initialize the OData API client.
+        
+        Args:
+            base_url: The base URL for the OData API.
+            username: The username for authentication.
+            password: The password for authentication.
+        """
+        super().__init__(url=base_url, username=username, password=password)
         self.base_url = base_url
-        if username is None:
-            self.username = os.getenv("CREDENTIALS_USERNAME")
-        else:
-            self.username = username
-        if password is None:
-            self.password = os.getenv("CREDENTIALS_PASSWORD")
-        else:
-            self.password = password
-
-    async def fetch_data(self, endpoint: str, username: str = None, password: str = None) -> Any:
-        # URL encode the endpoint to handle special characters
-        encoded_endpoint = requests.utils.quote(endpoint)
-        # Create the full URL
-        url = f"{self.base_url}/{encoded_endpoint}"
+    
+    async def fetch_data(self, endpoint: str = None) -> Dict[str, Any]:
+        """Fetch data from the OData API.
         
-        # Use credentials from environment variables if not provided
-        auth_username = username if username else self.username
-        auth_password = password if password else self.password
-        
-        # Create the auth object with the password as is
-        auth = HTTPBasicAuth(auth_username, auth_password)
-        # Make the request
-        response = requests.get(url, auth=auth)
-        response.raise_for_status()  # Raise an error for bad responses
-        return response.json()  # Return the JSON response
+        Args:
+            endpoint: The full URL to fetch data from.
+            
+        Returns:
+            The JSON response from the API.
+        """
+        try:
+            # Use the endpoint as the full URL directly, or fall back to base_url if None
+            url = endpoint if endpoint else self.base_url
+                
+            # Use the base class implementation to make the request
+            response = await super().fetch_data(url)
+            
+            # Check if response content is empty before returning JSON
+            if response is None or response == '':
+                raise ValueError("Empty response content")
+            
+            return response
+        except Exception as e:
+            import traceback
+            print(f"Error in fetch_data: {e}")
+            traceback.print_exc()
+            raise

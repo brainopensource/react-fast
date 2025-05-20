@@ -18,11 +18,31 @@ class DIContainer:
 
     def _register_services(self):
         # Register adapters
-        self._services[ExternalServiceInterface] = HttpClient()
+        # Register the interface implementation
+        odata_url = os.getenv("ODATA_WM_LDI_URL")
+        username = os.getenv("CREDENTIALS_USERNAME")
+        password = os.getenv("CREDENTIALS_PASSWORD")
+
+        if not all([odata_url, username, password]):
+            raise ValueError("ODATA_WM_LDI_URL, CREDENTIALS_USERNAME, and CREDENTIALS_PASSWORD must be set as environment variables.")
+
+        self._services[ExternalServiceInterface] = ODataAPIClient(  # Use the concrete client that implements the interface
+            base_url=odata_url,
+            username=username,
+            password=password
+        )
+        
+        # Register concrete clients if needed separately
+        self._services[ODataAPIClient] = ODataAPIClient(
+            base_url=odata_url,
+            username=username,
+            password=password
+        )
+        
         self._services[NewODataAPIClient] = NewODataAPIClient(
-            url=os.getenv("ODATA_WM_LDI_URL"),
-            username=os.getenv("CREDENTIALS_USERNAME"),
-            password=os.getenv("CREDENTIALS_PASSWORD")
+            url=odata_url,
+            username=username,
+            password=password
         )
         
         # Register use cases
@@ -31,7 +51,7 @@ class DIContainer:
             external_service=self.get(ExternalServiceInterface)
         )
         self._services[FetchODataDataUseCase] = FetchODataDataUseCase(
-            api_client=self.get(NewODataAPIClient)
+            api_client=self.get(ExternalServiceInterface)  # Ensure using the interface for consistency
         )
     
     def get(self, service_type):

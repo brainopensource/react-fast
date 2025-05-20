@@ -2,15 +2,31 @@ import logging
 import requests
 from requests.exceptions import RequestException
 from .base_fetch_data import BaseFetchDataUseCase
+from app.domain.interfaces.http_interfaces.external_service import ExternalServiceInterface
+import asyncio
+
 
 class FetchODataDataUseCase(BaseFetchDataUseCase):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, api_client: ExternalServiceInterface, *args, **kwargs):
+        super().__init__(api_client, *args, **kwargs)
         print("[FetchODataDataUseCase.__init__] Initializing FetchODataDataUseCase")
-        super().__init__(*args, **kwargs)
 
     def execute(self, endpoint: str = None):  # Default endpoint removed to avoid duplication
         print(f"[FetchODataDataUseCase.execute] Called with endpoint={endpoint}")
-        response = self.api_client.fetch_data(endpoint) if endpoint else self.api_client.fetch_data()
+        # Check if the api_client has a fetch_data_sync method (for backward compatibility)
+        if hasattr(self.api_client, 'fetch_data_sync'):
+            response = self.api_client.fetch_data_sync(endpoint) if endpoint else self.api_client.fetch_data_sync()
+        else:
+            # If the api_client doesn't have a fetch_data_sync method, use the async fetch_data method
+            # by running it in an event loop
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            try:
+                response = loop.run_until_complete(
+                    self.api_client.fetch_data(endpoint) if endpoint else self.api_client.fetch_data()
+                )
+            finally:
+                loop.close()
         print(f"[FetchODataDataUseCase.execute] Response object: {response}")
         try:
             data = response.json()
